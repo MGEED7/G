@@ -1,0 +1,243 @@
+-- Fltr Hub - Made by Majid (مجودي)
+
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/jensonhirst/Orion/main/source'))()
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local Window = OrionLib:MakeWindow({
+	Name = "Fltr Hub",
+	HidePremium = false,
+	SaveConfig = true,
+	ConfigFolder = "FltrHubConfig",
+	IntroEnabled = true,
+	IntroText = "Welcome to Fltr Hub",
+	IntroIcon = "rbxassetid://4483345998",
+	Icon = "rbxassetid://4483345998"
+})
+
+----------------------------
+-- 🎯 Aimbot Tab
+----------------------------
+local AimbotTab = Window:MakeTab({ Name = "🎯 Aimbot", Icon = "rbxassetid://4483345998", PremiumOnly = false })
+
+local aimbotCircleVisible = false
+local aimbotCircleRadius = 100
+local circleObj = nil
+
+-- زر تفعيل Aimbot
+AimbotTab:AddButton({
+	Name = "🔫 Enable Aimbot",
+	Callback = function()
+		loadstring([[
+			local Players = game:GetService("Players")
+			local LocalPlayer = Players.LocalPlayer
+			local RunService = game:GetService("RunService")
+			local Camera = workspace.CurrentCamera
+			local aimbotEnabled = false
+
+			local gui = Instance.new("ScreenGui", game.CoreGui)
+			local button = Instance.new("TextButton", gui)
+			button.Size = UDim2.new(0, 100, 0, 40)
+			button.Position = UDim2.new(0, 300, 0, 200)
+			button.Text = "Aimbot: OFF"
+			button.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+
+			button.MouseButton1Click:Connect(function()
+				aimbotEnabled = not aimbotEnabled
+				button.Text = aimbotEnabled and "Aimbot: ON" or "Aimbot: OFF"
+			end)
+
+			local function getNearest()
+				local closest, dist = nil, math.huge
+				for _, p in ipairs(Players:GetPlayers()) do
+					if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+						local d = (p.Character.Head.Position - LocalPlayer.Character.Head.Position).Magnitude
+						if d < dist then
+							dist = d
+							closest = p
+						end
+					end
+				end
+				return closest
+			end
+
+			RunService.RenderStepped:Connect(function()
+				if aimbotEnabled then
+					local target = getNearest()
+					if target and target.Character and target.Character:FindFirstChild("Head") then
+						Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position)
+					end
+				end
+			end)
+		]])()
+	end
+})
+
+-- دائرة التصويب
+local function createCircle()
+	if circleObj then circleObj:Remove() end
+	circleObj = Drawing.new("Circle")
+	circleObj.Thickness = 2
+	circleObj.Radius = aimbotCircleRadius
+	circleObj.Color = Color3.fromRGB(255, 0, 0)
+	circleObj.Filled = false
+	circleObj.Visible = true
+
+	RunService.RenderStepped:Connect(function()
+		if aimbotCircleVisible and circleObj then
+			circleObj.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+		end
+	end)
+end
+
+AimbotTab:AddToggle({
+	Name = "⭕ Show Aimbot Circle",
+	Default = false,
+	Callback = function(state)
+		aimbotCircleVisible = state
+		if state then createCircle() else if circleObj then circleObj.Visible = false end end
+	end
+})
+
+AimbotTab:AddTextbox({
+	Name = "🎯 Circle Size",
+	Default = tostring(aimbotCircleRadius),
+	TextDisappear = true,
+	Callback = function(val)
+		local num = tonumber(val)
+		if num then
+			aimbotCircleRadius = num
+			if circleObj then circleObj.Radius = num end
+		end
+	end
+})
+
+AimbotTab:AddButton({
+	Name = "🌈 Enable RGB Circle",
+	Callback = function()
+		spawn(function()
+			while aimbotCircleVisible and circleObj do
+				for i = 0, 1, 0.01 do
+					circleObj.Color = Color3.fromHSV(i, 1, 1)
+					wait()
+				end
+			end
+		end)
+	end
+})
+
+----------------------------
+-- 👁️ ESP Tab
+----------------------------
+local ESPTab = Window:MakeTab({ Name = "👁️ ESP", Icon = "rbxassetid://4483345998", PremiumOnly = false })
+
+local function showPlayerESP()
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+			local billboard = Instance.new("BillboardGui", p.Character.Head)
+			billboard.Size = UDim2.new(0, 200, 0, 50)
+			billboard.Adornee = p.Character.Head
+			billboard.AlwaysOnTop = true
+			local label = Instance.new("TextLabel", billboard)
+			label.Size = UDim2.new(1, 0, 1, 0)
+			label.Text = string.format("%s @%s\nDistance: %d studs", p.Name, p.UserId, math.floor((p.Character.Head.Position - LocalPlayer.Character.Head.Position).Magnitude))
+			label.TextColor3 = Color3.new(1, 1, 1)
+			label.BackgroundTransparency = 1
+			label.TextScaled = true
+		end
+	end
+end
+
+ESPTab:AddButton({
+	Name = "👤 Show Player Info",
+	Callback = showPlayerESP
+})
+
+----------------------------
+-- 👤 Player Tab
+----------------------------
+local PlayerTab = Window:MakeTab({ Name = "👤 Player", Icon = "rbxassetid://4483345998", PremiumOnly = false })
+
+PlayerTab:AddButton({
+	Name = "🔁 Reset Player",
+	Callback = function()
+		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+		if hum then hum.Health = 0 end
+	end
+})
+
+PlayerTab:AddButton({
+	Name = "🚫 Noclip",
+	Callback = function()
+		local function setNoclip(enable)
+			for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = not enable
+				end
+			end
+		end
+		RunService.Stepped:Connect(function() setNoclip(true) end)
+	end
+})
+
+PlayerTab:AddButton({
+	Name = "❤️‍🩹 Anti-Death",
+	Callback = function()
+		local hum = LocalPlayer.Character:WaitForChild("Humanoid")
+		hum:GetPropertyChangedSignal("Health"):Connect(function()
+			if hum.Health < 100 then hum.Health = 100 end
+		end)
+	end
+})
+
+PlayerTab:AddTextbox({
+	Name = "🚀 Set WalkSpeed",
+	Default = "16",
+	TextDisappear = true,
+	Callback = function(val)
+		local speed = tonumber(val)
+		if speed then
+			local hum = LocalPlayer.Character:WaitForChild("Humanoid")
+			hum.WalkSpeed = speed
+		end
+	end
+})
+
+----------------------------
+-- 🚗 Car Tab
+----------------------------
+local CarTab = Window:MakeTab({ Name = "🚗 Car", Icon = "rbxassetid://4483345998", PremiumOnly = false })
+
+CarTab:AddButton({
+	Name = "🚗 Enter Vehicle",
+	Callback = function()
+		local vehicle = workspace.Vehicles:FindFirstChild(LocalPlayer.Name)
+		if vehicle and vehicle:FindFirstChild("DriveSeat") then
+			local driveSeat = vehicle.DriveSeat
+			local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+			local humanoid = char:WaitForChild("Humanoid")
+			driveSeat:Sit(humanoid)
+		end
+	end
+})
+
+----------------------------
+-- 🚀 Auto Tab
+----------------------------
+local AutoTab = Window:MakeTab({ Name = "🚀 Auto", Icon = "rbxassetid://4483345998", PremiumOnly = false })
+
+AutoTab:AddButton({
+	Name = "🚚 Start Auto Farm",
+	Callback = function()
+		-- هنا تضع الكود الخاص بالـ Auto Farm الخاص بالشاحنات أو الباصات
+		-- مثال تفعيل Teleport إلى مكان الشاحنات، واختيار الحمولة
+		print("Auto Farm Started!")
+	end
+})
+
+----------------------------
+-- ✅ Initialize UI
+----------------------------
+OrionLib:Init()
