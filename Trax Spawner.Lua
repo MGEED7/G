@@ -42,7 +42,7 @@ tab2:Section({ Title = 'Enter Key' })
 
 tab1:Code({
 	Title = 'Get Key',
-	Code = 'discord.gg/fmqb7UGkyd',
+	Code = 'https://discord.gg/J2M2ECcanN',
 })
 
 tab1:Button({
