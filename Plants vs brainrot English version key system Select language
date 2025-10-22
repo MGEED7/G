@@ -1,11 +1,12 @@
 -- خدمات اللاعب
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 -- روابط السكربتات (ضع روابط raw هنا)
-local englishScriptURL = "loadstring(game:HttpGet("https://raw.githubusercontent.com/MGEED7/G/refs/heads/main/Plants%20vs%20brainrot%20English%20version%20key%20system%20Team-ZTK.lua.txt"))()"
-local arabicScriptURL = "loadstring(game:HttpGet("https://raw.githubusercontent.com/MGEED7/G/refs/heads/main/Plants%20vs%20brainrot(Arabic%2Bkey).lua.txt"))()"
+local englishScriptURL = "https://raw.githubusercontent.com/MGEED7/G/refs/heads/main/Plants%20vs%20brainrot%20English%20version%20key%20system%20Team-ZTK.lua.txt"
+local arabicScriptURL = "https://raw.githubusercontent.com/MGEED7/G/refs/heads/main/Plants%20vs%20brainrot(Arabic%2Bkey).lua.txt"
 
 -- إزالة أي واجهات قديمة
 for _, v in pairs(PlayerGui:GetChildren()) do
@@ -71,13 +72,23 @@ local function loadScript(url)
     end
 end
 
--- أحداث الضغط على الأزرار
+-- دالة Tween لإخفاء الواجهة
+local function hideGUI()
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+    local tween = TweenService:Create(frame, tweenInfo, {Position = UDim2.new(0.5, -160, 1, 50), BackgroundTransparency = 1})
+    tween:Play()
+    tween.Completed:Connect(function()
+        langGui:Destroy()
+    end)
+end
+
+-- أحداث الضغط على الأزرار مع Tween
 englishBtn.MouseButton1Click:Connect(function()
-    langGui:Destroy() -- إخفاء الواجهة
+    hideGUI()
     loadScript(englishScriptURL)
 end)
 
 arabicBtn.MouseButton1Click:Connect(function()
-    langGui:Destroy() -- إخفاء الواجهة
+    hideGUI()
     loadScript(arabicScriptURL)
 end)
